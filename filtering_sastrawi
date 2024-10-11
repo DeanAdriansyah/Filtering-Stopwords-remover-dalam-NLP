@@ -1,0 +1,96 @@
+import PyPDF2
+import re
+import string
+from Sastrawi.StopWordRemover.StopWordRemoverFactory import StopWordRemoverFactory
+from nltk.tokenize import word_tokenize
+import nltk
+
+# Mengunduh stopwords dari NLTK
+nltk.download('punkt')
+nltk.download('stopwords')
+
+# Fungsi untuk membaca file PDF
+def baca_pdf(nama_file):
+    teks_pdf = ""
+    with open(nama_file, "rb") as file:
+        pembaca_pdf = PyPDF2.PdfReader(file)
+        jumlah_halaman = len(pembaca_pdf.pages)
+        
+        # Membaca setiap halaman
+        for halaman in range(jumlah_halaman):
+            halaman_pdf = pembaca_pdf.pages[halaman]
+            teks_pdf += halaman_pdf.extract_text()
+    return teks_pdf
+
+# Fungsi untuk melakukan case folding (mengubah teks menjadi huruf kecil)
+def case_folding(teks):
+    return teks.lower()
+
+# Fungsi untuk menghapus emoji
+def hapus_emoji(teks):
+    emoji_pattern = re.compile(
+        "["
+        "\U0001F600-\U0001F64F"  # Emoticons
+        "\U0001F300-\U0001F5FF"  # Simbol dan Piktogram Lainnya
+        "\U0001F680-\U0001F6FF"  # Transportasi dan Simbol
+        "\U0001F700-\U0001F77F"  # Simbol Alchemical
+        "\U0001F780-\U0001F7FF"  # Geometric Shapes Extended
+        "\U0001F800-\U0001F8FF"  # Supplemental Arrows-C
+        "\U0001F900-\U0001F9FF"  # Supplemental Symbols and Pictographs
+        "\U0001FA00-\U0001FA6F"  # Chess Symbols
+        "\U0001FA70-\U0001FAFF"  # Symbols and Pictographs Extended-A
+        "\U00002702-\U000027B0"  # Simbol Miscellaneous
+        "\U000024C2-\U0001F251"
+        "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', teks)
+
+# Fungsi untuk menghapus angka dari teks
+def hapus_angka(teks):
+    return re.sub(r'\d+', '', teks)
+
+# Fungsi untuk menghapus tanda baca dari teks
+def hapus_tanda_baca(teks):
+    return teks.translate(str.maketrans('','', string.punctuation))
+
+# Fungsi untuk menghapus stopword menggunakan Sastrawi
+def hapus_stopword(teks):
+    factory = StopWordRemoverFactory()
+    stopword = factory.create_stop_word_remover()
+    teks_tanpa_stopword = stopword.remove(teks)
+    return teks_tanpa_stopword
+
+# Fungsi untuk menyimpan teks ke dalam file .txt
+def simpan_teks(nama_file, teks):
+    with open(nama_file, "w", encoding="utf-8") as file:
+        file.write(teks)
+
+# Fungsi utama untuk melakukan seluruh proses
+def tugas_case_folding_pdf(pdf_file, txt_file_output):
+    # Langkah 1 : Membaca file PDF 
+    teks_pdf = baca_pdf(pdf_file)
+
+    # Langkah 2 : Melakukan case folding
+    teks_case_folding = case_folding(teks_pdf)
+    
+    # Langkah 3 : Menghapus Angka
+    teks_tanpa_angka = hapus_angka(teks_case_folding)
+    
+    # Langkah 4 : Menghapus tanda baca
+    teks_tanpa_tanda_baca = hapus_tanda_baca(teks_tanpa_angka)
+    
+    # Langkah 5 : Menghapus emoji
+    teks_tanpa_emoji = hapus_emoji(teks_tanpa_tanda_baca)
+    
+    # Langkah 6 : Menghapus stopword menggunakan Sastrawi
+    teks_bersih = hapus_stopword(teks_tanpa_emoji)
+    
+    # Langkah 7 : Menyimpan hasil ke file teks
+    simpan_teks(txt_file_output, teks_bersih)
+    print(f"Hasil case folding, tanpa angka, tanda baca, emoji, dan stopword disimpan di {txt_file_output}")
+
+# Nama file PDF dan file output
+pdf_file = "komentar_duolingo.pdf" # Nama file PDF
+txt_file_output = "hasil_bersih_sastrawi.txt" # Nama file output
+
+# Menjalankan tugas
+tugas_case_folding_pdf(pdf_file, txt_file_output)
