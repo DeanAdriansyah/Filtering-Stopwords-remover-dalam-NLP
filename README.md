@@ -1,5 +1,11 @@
 # Filtering-Stopwords-remover-dalam-NLP
-Filtering Stopwords dalam NLP, Python
+By : Dean Adriansyah Asy'ari
+___
+Something to do Before Coding
+> pip install nltk
+
+> pip install PySastrawi
+___
 
 - Kode NLTK
 ```python
